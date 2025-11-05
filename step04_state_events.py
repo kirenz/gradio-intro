@@ -8,13 +8,14 @@ import gradio as gr
 def add_item(new_item: str, items: Optional[List[str]]):
     """Store each item in the session state and update the list display."""
     items = list(items or [])
-    text = new_item.strip()
+    text = (new_item or "").strip()
     if not text:
-        raise gr.Error("Please type something before adding.")
+        highlighted: List[Tuple[str, Optional[str]]] = [(value, None) for value in items]
+        return items, "", highlighted, "Please type something before adding."
 
     items.append(text)
-    highlighted: List[Tuple[str, Optional[str]]] = [(value, None) for value in items]
-    return items, "", highlighted
+    highlighted = [(value, None) for value in items]
+    return items, "", highlighted, ""
 
 
 with gr.Blocks(title="State & Events") as demo:
@@ -27,9 +28,10 @@ with gr.Blocks(title="State & Events") as demo:
         add_btn = gr.Button("Add", variant="primary")
 
     listbox = gr.HighlightedText(label="Saved items", combine_adjacent=True)
+    status = gr.Markdown("")
 
-    add_btn.click(add_item, [new_item, items_state], [items_state, new_item, listbox])
-    new_item.submit(add_item, [new_item, items_state], [items_state, new_item, listbox])
+    add_btn.click(add_item, [new_item, items_state], [items_state, new_item, listbox, status])
+    new_item.submit(add_item, [new_item, items_state], [items_state, new_item, listbox, status])
 
 
 if __name__ == "__main__":
