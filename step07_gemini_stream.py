@@ -4,12 +4,16 @@ import os
 from typing import Iterator
 
 import gradio as gr
-import google.generativeai as genai
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("Set GEMINI_API_KEY in your environment or .env file.")
+client = genai.Client(api_key=api_key)
 
 MODEL_NAME = "gemini-2.0-flash"
 
@@ -20,10 +24,16 @@ def stream_text(prompt: str) -> Iterator[str]:
         yield "Please enter a prompt to begin."
         return
 
-    model = genai.GenerativeModel(MODEL_NAME)
-    for chunk in model.generate_content(prompt, stream=True):
+    stream = client.models.generate_content_stream(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(temperature=0.7),
+    )
+    collected: list[str] = []
+    for chunk in stream:
         if chunk.text:
-            yield chunk.text
+            collected.append(chunk.text)
+            yield "".join(collected)
 
 
 with gr.Blocks(title="Gemini Streaming") as demo:

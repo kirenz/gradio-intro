@@ -3,14 +3,18 @@
 import os
 
 import gradio as gr
-import google.generativeai as genai
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("Set GEMINI_API_KEY in your environment or .env file.")
+client = genai.Client(api_key=api_key)
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-2.0-flash"
 
 
 def generate_text(prompt: str) -> str:
@@ -18,9 +22,14 @@ def generate_text(prompt: str) -> str:
     if not prompt.strip():
         raise gr.Error("Please enter a prompt.")
 
-    model = genai.GenerativeModel(MODEL_NAME)
-    response = model.generate_content(prompt)
-    return response.text
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(temperature=0.7),
+    )
+    if response.text:
+        return response.text
+    raise gr.Error("The model did not return any text. Please try another prompt.")
 
 
 with gr.Blocks(title="Gemini Text Generator") as demo:

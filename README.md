@@ -1,11 +1,13 @@
 # Building AI Apps with Gradio
 
-Use this repository to learn how to build AI apps with [Gradio](https://www.gradio.app/) and Google Gemini using `uv`. Each lesson is a tiny Python file that you can run locally to see the concept in action.
+Use this repository to learn how to build AI apps with [Gradio](https://www.gradio.app/) and Google Gemini using `uv`. 
+
+Each lesson is a tiny Python file that you can run locally to see the concept in action.
 
 > [!IMPORTANT]
 > You need to have `uv` installed on your machine. If you have not set it up yet, follow the installation guide in [this repository](https://github.com/kirenz/uv-setup).
 
-You also need a Google Gemini API key. To get one, sign up for **Google AI Studio** at [https://ai.google/studio](https://ai.google/studio) and create an API key in the settings.
+You also need a Google Gemini API key. To get one, sign up for **Google AI Studio** at [https://ai.google/studio](https://aistudio.google.com/) and create an API key in the settings.
 
 ## Step-by-step instructions
 
@@ -47,7 +49,7 @@ If you are on macOS, open the built-in **Terminal** app. On Windows, open **Git 
 
    You can also open the folder manually from within VS Code.
 
-   Replace `your_api_key_here` in the `.env` file with the key you generated in Google AI Studio.
+   Finally, open the new `.env` file and replace `your_api_key_here` with the key you generated in Google AI Studio.
 
 ---
 
@@ -149,7 +151,7 @@ uv run python app.py
 ## Tips for Using Gemini
 
 - Keep your `.env` file private so your API key never leaks.
-- `"gemini-1.5-flash"` is fast and inexpensive; `"gemini-1.5-pro"` is better for complex reasoning and images.
+- `"gemini-2.0-flash"` is fast and inexpensive; `"gemini-2.0-pro"` handles tougher reasoning and multimodal questions.
 - Streaming (steps 7, 8, and the bonus app) makes long answers feel responsive.
 - If a request fails, check that inputs are not empty and that you have not exceeded rate limits.
 

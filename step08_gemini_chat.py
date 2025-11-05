@@ -1,15 +1,15 @@
-"""Step 8: Build a simple Gemini-powered chatbot."""
+"""Step 8: Chat with Gemini and remember previous messages."""
 
-import os
-from typing import Iterator, List
+from collections.abc import Iterable
+from typing import Any, List
 
 import gradio as gr
-import google.generativeai as genai
 from dotenv import load_dotenv
+from google import genai
 
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client()
 
 MODEL_NAME = "gemini-2.0-flash"
 SYSTEM_PROMPT = (
@@ -18,70 +18,50 @@ SYSTEM_PROMPT = (
 )
 
 
-ChatHistory = List[List[str]]
+def _to_text(content: Any) -> str:
+    """Normalize Gradio message content into plain text."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, Iterable):
+        parts: List[str] = []
+        for part in content:
+            if isinstance(part, dict) and part.get("text"):
+                parts.append(part["text"])
+        if parts:
+            return "\n".join(parts)
+    return ""
 
 
-def add_user_message(user_message: str, history: ChatHistory | None):
-    """Append the user's message to the chat history and clear the input box."""
-    text = user_message.strip()
-    if not text:
-        raise gr.Error("Please enter a message.")
-
-    history = list(history or [])
-    history.append([text, ""])
-    return "", history, history
-
-
-def _format_history_for_gemini(history: ChatHistory) -> list[dict[str, object]]:
-    """Convert Gradio-style history into Gemini's expected structure."""
-    gemini_history = [{"role": "user", "parts": [SYSTEM_PROMPT]}]
-    for user_text, bot_text in history:
-        gemini_history.append({"role": "user", "parts": [user_text]})
-        if bot_text:
-            gemini_history.append({"role": "model", "parts": [bot_text]})
-    return gemini_history
-
-
-def chatbot_reply(history: ChatHistory) -> Iterator[tuple[ChatHistory, ChatHistory]]:
-    """Stream the assistant's reply and update both the UI and the stored history."""
-    if not history:
-        return
-
-    user_message = history[-1][0]
-    previous_turns = history[:-1]
-
-    model = genai.GenerativeModel(MODEL_NAME)
-    chat = model.start_chat(history=_format_history_for_gemini(previous_turns))
-
-    answer = ""
-    for chunk in chat.send_message(user_message, stream=True):
-        if chunk.text:
-            answer += chunk.text
-            updated_history = previous_turns + [[user_message, answer]]
-            yield updated_history, updated_history
-
-
-with gr.Blocks(title="Gemini Chatbot") as demo:
-    gr.Markdown("### Chat with Gemini and keep the conversation history.")
-
-    chatbot = gr.Chatbot(label="Chat")
-    state = gr.State([])
-
-    with gr.Row():
-        message = gr.Textbox(
-            placeholder="Ask me anything about business, marketing, finance…",
-            label="Your message",
-            scale=8,
+def respond(message: str, history: list[dict[str, str]]) -> str:
+    """Send the full conversation to Gemini and return its reply."""
+    conversation = [{"role": "system", "content": SYSTEM_PROMPT}] + history + [
+        {"role": "user", "content": message}
+    ]
+    contents = []
+    for entry in conversation:
+        text = _to_text(entry.get("content", ""))
+        if not text:
+            continue
+        contents.append(
+            {
+                "role": entry.get("role", "user"),
+                "parts": [{"text": text}],
+            }
         )
-        send = gr.Button("Send", scale=1, variant="primary")
 
-    send.click(add_user_message, [message, state], [message, chatbot, state]).then(
-        chatbot_reply, inputs=state, outputs=[chatbot, state]
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=contents,
     )
+    return response.text or "Sorry, I did not catch that."
 
-    message.submit(add_user_message, [message, state], [message, chatbot, state]).then(
-        chatbot_reply, inputs=state, outputs=[chatbot, state]
-    )
+
+demo = gr.ChatInterface(
+    fn=respond,
+    title="Gemini Chatbot",
+    description="Ask anything about business, marketing, or finance. Gemini remembers the conversation.",
+    type="messages",
+)
 
 
 if __name__ == "__main__":

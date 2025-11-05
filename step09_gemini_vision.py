@@ -4,13 +4,17 @@ import io
 import os
 
 import gradio as gr
-import google.generativeai as genai
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 from PIL import Image
 
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("Set GEMINI_API_KEY in your environment or .env file.")
+client = genai.Client(api_key=api_key)
 
 MODEL_NAME = "gemini-2.0-flash"
 
@@ -26,14 +30,21 @@ def describe_image(question: str, img: Image.Image) -> str:
     img.save(buffer, format="PNG")
     image_bytes = buffer.getvalue()
 
-    model = genai.GenerativeModel(MODEL_NAME)
-    response = model.generate_content(
-        [
-            {"text": prompt},
-            {"mime_type": "image/png", "data": image_bytes},
+    contents = types.UserContent(
+        parts=[
+            types.Part.from_text(text=prompt),
+            types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
         ]
     )
-    return response.text
+
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=[contents],
+        config=types.GenerateContentConfig(temperature=0.4),
+    )
+    if response.text:
+        return response.text
+    raise gr.Error("Gemini did not return an answer. Please try another image.")
 
 
 with gr.Blocks(title="Gemini Vision Q&A") as demo:
