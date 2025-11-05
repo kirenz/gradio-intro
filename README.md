@@ -60,6 +60,10 @@ If you are on macOS, open the built-in **Terminal** app. On Windows, open **Git 
 - Store information between interactions with `gr.State`.
 - Handle files and images.
 - Connect to Google Gemini for text, chat, and vision.
+- Generate fresh images from text prompts with Imagen 4.
+- Direct short-form video clips with Gemini Veo.
+- Morph between uploaded frames with Gemini's image-to-video transition.
+- Turn campaign briefs into Veo videos with brand- and persona-aware prompts.
 - Stream model outputs so users see answers immediately.
 - Add friendly validation and theming.
 
@@ -132,6 +136,34 @@ uv run python step10_error_handling.py
 Switches the Gradio theme for an instant visual upgrade.
 ```bash
 uv run python step11_styling.py
+```
+
+## Regular Gemnini API Required
+
+For the following steps, you need a regular Gemini API key to access the Imagen and Veo models. These models are not available with the free tier key from Google AI Studio.
+
+### Step 12 – Gemini Image Generation
+Turns text prompts into brand-new images with Imagen 4.
+```bash
+uv run python step12_gemini_image_generation.py
+```
+
+### Step 13 – Gemini Video Generation
+Creates short clips from text prompts and saves the MP4 output locally.
+```bash
+uv run python step13_gemini_video_generation.py
+```
+
+### Step 14 – Gemini Video Transition
+Blends between a starting and ending image to create a cinematic clip.
+```bash
+uv run python step14_gemini_video_interpolation.py
+```
+
+### Step 15 – Marketing Video Studio
+Transform a brand brief and customer persona into a Veo-powered marketing clip.
+```bash
+uv run python step15_advanced_veo_workbench.py
 ```
 
 
