@@ -58,12 +58,19 @@ with gr.Blocks(title="Gemini Vision Q&A") as demo:
         )
 
     answer_box = gr.Markdown(label="Answer")
-    ask_button = gr.Button("Ask Gemini", variant="primary")
+    with gr.Row():
+        ask_button = gr.Button("Ask Gemini", variant="primary")
+        reset_button = gr.Button("Start Over")
 
     ask_button.click(
         describe_image,
         inputs=[question_box, image_input],
         outputs=answer_box,
+    )
+    reset_button.click(
+        lambda: (None, "", ""),
+        inputs=[],
+        outputs=[image_input, question_box, answer_box],
     )
 
 

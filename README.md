@@ -134,11 +134,7 @@ Switches the Gradio theme for an instant visual upgrade.
 uv run python step11_styling.py
 ```
 
-### Step 12 – Handy LLM Helpers
-Utility functions for prompt templates and bullet formatting.
-```bash
-uv run python step12_llm_patterns.py
-```
+
 
 ### Bonus – Streaming Gemini Starter App
 A one-file app that streams Gemini output for any prompt.

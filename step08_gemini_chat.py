@@ -6,6 +6,7 @@ from typing import Any, List
 import gradio as gr
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 
 load_dotenv()
@@ -34,17 +35,20 @@ def _to_text(content: Any) -> str:
 
 def respond(message: str, history: list[dict[str, str]]) -> str:
     """Send the full conversation to Gemini and return its reply."""
-    conversation = [{"role": "system", "content": SYSTEM_PROMPT}] + history + [
-        {"role": "user", "content": message}
-    ]
+    conversation = history + [{"role": "user", "content": message}]
     contents = []
     for entry in conversation:
         text = _to_text(entry.get("content", ""))
         if not text:
             continue
+        role = entry.get("role", "user")
+        if role == "assistant":
+            role = "model"
+        if role not in {"user", "model"}:
+            role = "user"
         contents.append(
             {
-                "role": entry.get("role", "user"),
+                "role": role,
                 "parts": [{"text": text}],
             }
         )
@@ -52,6 +56,9 @@ def respond(message: str, history: list[dict[str, str]]) -> str:
     response = client.models.generate_content(
         model=MODEL_NAME,
         contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+        ),
     )
     return response.text or "Sorry, I did not catch that."
 
